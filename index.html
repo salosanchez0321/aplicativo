@@ -1,0 +1,639 @@
+<!doctype html>
+<!--
+  ============================================================================
+  ARCANA & ELIXIRES · COVEN BAR — Maqueta front-end (SPA visual)
+  ----------------------------------------------------------------------------
+  Stack: HTML5 + Bootstrap 5 (solo CDN) + JavaScript vanilla.
+  Organización:
+    index.html      → Estructura y vistas (cada <section data-view> es un componente/página)
+    css/styles.css  → Tokens de diseño (variables CSS) + estilos por componente
+    js/data.js      → Datos simulados (sustituir por llamadas a una API real)
+    js/app.js       → Router de vistas, render de componentes, formularios e interacciones
+
+  Convención de clases: prefijo "ae-" (Arcana & Elixires) para todo lo propio,
+  de modo que nunca choque con Bootstrap ni con el framework al que se migre.
+  Convención de datos: atributos data-* para el comportamiento (data-view-link,
+  data-action, data-filter…). El CSS nunca depende de data-*, y el JS nunca
+  depende de clases visuales: así cada capa se puede trasladar por separado.
+  ============================================================================
+-->
+<html lang="es" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Inicio · Arcana &amp; Elixires — Coven Bar</title>
+  <meta name="description" content="Coctelería de autor, rituales y experiencias inmersivas. Reserva tu mesa, consulta tu Grimorio y paga tu cuenta en Arcana & Elixires · Coven Bar." />
+  <meta name="theme-color" content="#0d0b10" />
+
+  <!-- Tipografías: Cinzel (titulares rituales) + Figtree (lectura) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@1,500;1,600&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Bootstrap 5 (CSS) vía CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+
+  <!-- Estilos propios (tokens + componentes) -->
+  <link href="css/styles.css" rel="stylesheet" />
+</head>
+<body class="ae-body">
+
+  <!-- ACCESIBILIDAD · Enlace para saltar directamente al contenido con teclado -->
+  <a class="ae-skip-link" href="#main">Saltar al contenido</a>
+
+  <!-- =======================================================================
+       ICONOS · Sprite SVG inline (sin librerías externas).
+       Uso: <svg class="ae-icon"><use href="#i-home"/></svg>
+       ======================================================================= -->
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none" aria-hidden="true">
+    <defs>
+      <symbol id="i-logo" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M30 8a16 16 0 1 0 10 28A13 13 0 0 1 30 8Z"/><path d="M18 18h12l-6 9-6-9Z"/><path d="M24 27v8M20 35h8"/><path d="M36 10l1 2 2 1-2 1-1 2-1-2-2-1 2-1z"/></g></symbol>
+      <symbol id="i-home" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></g></symbol>
+      <symbol id="i-book" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3Z"/><path d="M5 17a3 3 0 0 1 3-3h11"/><path d="m12 7 .7 1.4 1.5.2-1.1 1 .3 1.5-1.4-.7-1.4.7.3-1.5-1.1-1 1.5-.2Z"/></g></symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M14.5 13.2a2.6 2.6 0 1 0 1.3 3.4 2 2 0 0 1-1.3-3.4Z"/></g></symbol>
+      <symbol id="i-glass" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16l-8 9Z"/><path d="M12 13v7M8 20h8"/><path d="M7 7h10"/></g></symbol>
+      <symbol id="i-more" viewBox="0 0 24 24"><g fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></g></symbol>
+      <symbol id="i-history" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"/><path d="M4 4v4.5h4.5"/><path d="M12 8v4l3 2"/></g></symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></g></symbol>
+      <symbol id="i-logout" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></g></symbol>
+      <symbol id="i-up" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></g></symbol>
+      <symbol id="i-down" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7 7 17M16 17H7V8"/></g></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-gift" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12"/><path d="M12 8S10.5 4 8 4a2 2 0 0 0 0 4M12 8s1.5-4 4-4a2 2 0 0 1 0 4"/></g></symbol>
+      <symbol id="i-tarot" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="m12 8 1 2.2 2.3.3-1.7 1.6.4 2.3-2-1.1-2 1.1.4-2.3-1.7-1.6 2.3-.3Z"/></g></symbol>
+      <symbol id="i-flask" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6L4.5 18.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7 15h10"/></g></symbol>
+      <symbol id="i-bag" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></g></symbol>
+      <symbol id="i-wallet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2-2h11v4"/><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M16 13.5h.01"/></g></symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></g></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></g></symbol>
+      <symbol id="i-users" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 20a6.5 6.5 0 0 0-2.5-5.1"/></g></symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 2.5 13.8 10 21.5 12 13.8 14 12 21.5 10.2 14 2.5 12 10.2 10Z" fill="currentColor"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></g></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20Z"/><path d="M12 10v4M12 17h.01"/></g></symbol>
+    </defs>
+  </svg>
+
+  <!-- =======================================================================
+       COMPONENTE · Navbar superior (hamburguesa colapsable de Bootstrap)
+       - Móvil/tablet: logo + botón hamburguesa que despliega el menú.
+       - Desktop (≥ lg): menú completo en línea.
+       - Cada enlace lleva data-view-link="<vista>" para que el router lo sincronice.
+       ======================================================================= -->
+  <header>
+    <nav class="navbar navbar-expand-lg fixed-top ae-navbar" aria-label="Navegación principal">
+      <div class="container-xl">
+        <a class="navbar-brand ae-brand" href="#inicio" data-view-link="inicio">
+          <svg class="ae-brand__logo" aria-hidden="true"><use href="#i-logo"/></svg>
+          <span class="ae-brand__text">
+            <span class="ae-brand__name">Arcana &amp; Elixires</span>
+            <span class="ae-brand__sub">Coven Bar</span>
+          </span>
+        </a>
+
+        <button class="navbar-toggler ae-navbar__toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#aeMainMenu" aria-controls="aeMainMenu" aria-expanded="false"
+                aria-label="Abrir menú">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="aeMainMenu">
+          <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1 ae-navbar__list">
+            <li class="nav-item"><a class="nav-link ae-navbar__link" href="#inicio" data-view-link="inicio"><svg class="ae-icon" aria-hidden="true"><use href="#i-home"/></svg>Inicio</a></li>
+            <li class="nav-item"><a class="nav-link ae-navbar__link" href="#grimorio" data-view-link="grimorio"><svg class="ae-icon" aria-hidden="true"><use href="#i-book"/></svg>Mi Grimorio</a></li>
+            <li class="nav-item"><a class="nav-link ae-navbar__link" href="#reservar" data-view-link="reservar"><svg class="ae-icon" aria-hidden="true"><use href="#i-calendar"/></svg>Reservar</a></li>
+            <li class="nav-item"><a class="nav-link ae-navbar__link" href="#carta" data-view-link="carta"><svg class="ae-icon" aria-hidden="true"><use href="#i-glass"/></svg>Carta &amp; Pagos</a></li>
+            <li class="nav-item"><a class="nav-link ae-navbar__link" href="#historial" data-view-link="historial"><svg class="ae-icon" aria-hidden="true"><use href="#i-history"/></svg>Historial</a></li>
+            <li class="nav-item"><a class="nav-link ae-navbar__link" href="#ajustes" data-view-link="ajustes"><svg class="ae-icon" aria-hidden="true"><use href="#i-settings"/></svg>Ajustes</a></li>
+            <li class="nav-item ms-lg-2">
+              <button type="button" class="btn ae-btn ae-btn--ghost w-100" data-action="logout">
+                <svg class="ae-icon" aria-hidden="true"><use href="#i-logout"/></svg>Cerrar sesión
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- =======================================================================
+       CONTENEDOR DE VISTAS
+       Cada <section class="ae-view" data-view="..."> es una "página" de la SPA.
+       Solo una está visible; el resto lleva la clase d-none de Bootstrap.
+       ======================================================================= -->
+  <main id="main" class="ae-main" tabindex="-1">
+    <div class="container-xl">
+
+      <!-- ===================================================================
+           VISTA · INICIO / PANEL
+           =================================================================== -->
+      <section class="ae-view" data-view="inicio" aria-labelledby="t-inicio">
+        <div class="ae-view__head">
+          <p class="ae-eyebrow"><svg class="ae-icon ae-icon--sm" aria-hidden="true"><use href="#i-moon"/></svg><span data-bind="moonPhase">Luna creciente</span></p>
+          <h1 id="t-inicio" class="ae-title" tabindex="-1">Buenas noches, <span data-bind="userFirstName">Morgana</span></h1>
+        </div>
+
+        <div class="row g-3 g-lg-4">
+          <!-- COMPONENTE · Tarjeta de saldo total con tendencia -->
+          <div class="col-12 col-lg-7">
+            <article class="ae-card ae-balance" aria-labelledby="balance-label">
+              <div class="ae-balance__top">
+                <div>
+                  <p id="balance-label" class="ae-balance__label">Saldo total del Grimorio</p>
+                  <p class="ae-balance__amount" data-bind="totalBalance">$ 0</p>
+                </div>
+                <span class="ae-trend ae-trend--up" data-bind="trend">
+                  <svg class="ae-icon ae-icon--sm" aria-hidden="true"><use href="#i-up"/></svg>
+                  <span>+12,4%</span>
+                </span>
+              </div>
+              <p class="ae-balance__meta">
+                <span data-bind="essencePoints">0</span> puntos de Esencia ·
+                Nivel <strong data-bind="memberLevel">Iniciada</strong>
+              </p>
+              <!-- Mini-sparkline de tendencia (SVG generado por JS) -->
+              <svg class="ae-sparkline" viewBox="0 0 300 60" preserveAspectRatio="none" role="img"
+                   aria-label="Tendencia del saldo en las últimas 8 semanas" data-bind="sparkline"></svg>
+              <!-- Acciones rápidas -->
+              <div class="ae-quick" role="group" aria-label="Acciones rápidas">
+                <a href="#reservar" class="ae-quick__btn" data-view-link="reservar"><span class="ae-quick__icon"><svg class="ae-icon" aria-hidden="true"><use href="#i-calendar"/></svg></span>Reservar</a>
+                <a href="#carta" class="ae-quick__btn" data-view-link="carta"><span class="ae-quick__icon"><svg class="ae-icon" aria-hidden="true"><use href="#i-glass"/></svg></span>Pedir</a>
+                <button type="button" class="ae-quick__btn" data-action="topup"><span class="ae-quick__icon"><svg class="ae-icon" aria-hidden="true"><use href="#i-plus"/></svg></span>Recargar</button>
+                <a href="#reservar?tab=regalar" class="ae-quick__btn" data-view-link="reservar" data-tab="regalar"><span class="ae-quick__icon"><svg class="ae-icon" aria-hidden="true"><use href="#i-gift"/></svg></span>Regalar</a>
+              </div>
+            </article>
+          </div>
+
+          <!-- COMPONENTE · Ritual destacado de la noche -->
+          <div class="col-12 col-lg-5">
+            <article class="ae-card ae-feature" aria-labelledby="feature-title">
+              <img src="img/hero.jpg" alt="Elixir rojo humeante en copa de cristal tallado, rodeado de velas y cartas de tarot" class="ae-feature__img" width="1600" height="1008" />
+              <div class="ae-feature__body">
+                <p class="ae-eyebrow ae-eyebrow--gold">Ritual de esta noche</p>
+                <h2 id="feature-title" class="ae-feature__title">Sangre de Luna</h2>
+                <p class="ae-feature__text">Gin de flor de saúco, granada ahumada y bitter de rosa. Servido con humo de palo santo.</p>
+                <a href="#carta" class="btn ae-btn ae-btn--gold" data-view-link="carta">Ver la carta</a>
+              </div>
+            </article>
+          </div>
+
+          <!-- COMPONENTE · Próxima reserva -->
+          <div class="col-12 col-md-6 col-lg-4">
+            <article class="ae-card ae-next" aria-labelledby="next-title">
+              <h2 id="next-title" class="ae-card__title">Tu próximo ritual</h2>
+              <div data-bind="nextReservation"><!-- Render JS --></div>
+            </article>
+          </div>
+
+          <!-- COMPONENTE · Gráfico de consumos por categoría (CSS puro) -->
+          <div class="col-12 col-md-6 col-lg-8">
+            <article class="ae-card" aria-labelledby="chart-title">
+              <div class="d-flex justify-content-between align-items-baseline gap-2 flex-wrap">
+                <h2 id="chart-title" class="ae-card__title mb-0">Consumos del ciclo lunar</h2>
+                <span class="ae-muted small">Últimas 4 semanas</span>
+              </div>
+              <div class="ae-chart" data-bind="chart" role="img" aria-describedby="chart-table-caption"></div>
+              <!-- Tabla equivalente para lectores de pantalla -->
+              <table class="visually-hidden" data-bind="chartTable">
+                <caption id="chart-table-caption">Consumos por categoría en las últimas 4 semanas</caption>
+              </table>
+            </article>
+          </div>
+
+          <!-- COMPONENTE · Movimientos recientes -->
+          <div class="col-12">
+            <article class="ae-card" aria-labelledby="recent-title">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h2 id="recent-title" class="ae-card__title mb-0">Movimientos recientes</h2>
+                <a href="#historial" class="ae-link" data-view-link="historial">Ver todo <svg class="ae-icon ae-icon--sm" aria-hidden="true"><use href="#i-chevron"/></svg></a>
+              </div>
+              <ul class="ae-tx-list" data-bind="recentTx" aria-live="polite"></ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VISTA · MI GRIMORIO (equivalente a "Cuentas")
+           Monedero, puntos de Esencia y tarjetas regalo.
+           =================================================================== -->
+      <section class="ae-view d-none" data-view="grimorio" aria-labelledby="t-grimorio">
+        <div class="ae-view__head">
+          <p class="ae-eyebrow">Tus cuentas</p>
+          <h1 id="t-grimorio" class="ae-title" tabindex="-1">Mi Grimorio</h1>
+        </div>
+
+        <!-- COMPONENTE · Carnet de miembro del Coven -->
+        <article class="ae-member mb-4" aria-label="Carnet de miembro">
+          <div class="ae-member__row">
+            <svg class="ae-member__logo" aria-hidden="true"><use href="#i-logo"/></svg>
+            <span class="ae-member__tier" data-bind="memberLevel">Iniciada</span>
+          </div>
+          <p class="ae-member__name" data-bind="userFullName">Morgana Valdés</p>
+          <p class="ae-member__id">Miembro N.º <span data-bind="memberId">0000</span> · desde <span data-bind="memberSince">2025</span></p>
+          <div class="ae-progress-wrap">
+            <div class="d-flex justify-content-between small">
+              <span>Hacia <strong data-bind="nextLevel">Hechicera</strong></span>
+              <span data-bind="levelProgressLabel">0 / 0</span>
+            </div>
+            <div class="progress ae-progress" role="progressbar" aria-label="Progreso hacia el siguiente nivel" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-bind="levelProgress">
+              <div class="progress-bar" style="width: 0%"></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- COMPONENTE · Lista de cuentas (render JS desde data.js) -->
+        <h2 class="ae-section-title">Cuentas activas</h2>
+        <div class="row g-3" data-bind="accounts"></div>
+
+        <h2 class="ae-section-title mt-4">Beneficios de tu nivel</h2>
+        <ul class="ae-perks">
+          <li><svg class="ae-icon" aria-hidden="true"><use href="#i-spark"/></svg>1 Elixir de bienvenida en tu cumpleaños</li>
+          <li><svg class="ae-icon" aria-hidden="true"><use href="#i-spark"/></svg>Acceso anticipado a rituales de luna llena</li>
+          <li><svg class="ae-icon" aria-hidden="true"><use href="#i-spark"/></svg>5% de Esencia en cada consumo</li>
+        </ul>
+      </section>
+
+      <!-- ===================================================================
+           VISTA · RESERVAR (equivalente a "Transferencias")
+           Dos formularios en pestañas: Reservar mesa / Regalar Esencia.
+           =================================================================== -->
+      <section class="ae-view d-none" data-view="reservar" aria-labelledby="t-reservar">
+        <div class="ae-view__head">
+          <p class="ae-eyebrow">Invoca tu noche</p>
+          <h1 id="t-reservar" class="ae-title" tabindex="-1">Reservar &amp; Regalar</h1>
+        </div>
+
+        <!-- COMPONENTE · Pestañas de formulario (nav-pills de Bootstrap) -->
+        <ul class="nav nav-pills ae-pills mb-4" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-reserva" data-bs-toggle="pill" data-bs-target="#pane-reserva" type="button" role="tab" aria-controls="pane-reserva" aria-selected="true">
+              <svg class="ae-icon" aria-hidden="true"><use href="#i-calendar"/></svg>Reservar mesa
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-regalar" data-bs-toggle="pill" data-bs-target="#pane-regalar" type="button" role="tab" aria-controls="pane-regalar" aria-selected="false">
+              <svg class="ae-icon" aria-hidden="true"><use href="#i-gift"/></svg>Regalar Esencia
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+          <!-- FORMULARIO · Reserva de mesa / experiencia -->
+          <div class="tab-pane fade show active" id="pane-reserva" role="tabpanel" aria-labelledby="tab-reserva" tabindex="0">
+            <div class="row g-4">
+              <div class="col-12 col-lg-7">
+                <form class="ae-card ae-form needs-validation" id="form-reserva" novalidate>
+                  <div class="row g-3">
+                    <div class="col-12">
+                      <label for="r-experience" class="form-label">Experiencia</label>
+                      <select id="r-experience" name="experience" class="form-select ae-input" required data-bind="experienceOptions">
+                        <option value="" selected disabled>Elige tu ritual…</option>
+                      </select>
+                      <div class="invalid-feedback">Elige una experiencia para tu noche.</div>
+                    </div>
+                    <div class="col-6">
+                      <label for="r-date" class="form-label">Fecha</label>
+                      <input type="date" id="r-date" name="date" class="form-control ae-input" required />
+                      <div class="invalid-feedback">Indica una fecha a partir de hoy.</div>
+                    </div>
+                    <div class="col-6">
+                      <label for="r-time" class="form-label">Hora</label>
+                      <select id="r-time" name="time" class="form-select ae-input" required>
+                        <option value="" selected disabled>—</option>
+                        <option>19:00</option><option>20:30</option><option>22:00</option><option>23:30</option><option>01:00</option>
+                      </select>
+                      <div class="invalid-feedback">Elige una hora.</div>
+                    </div>
+                    <div class="col-6">
+                      <label for="r-guests" class="form-label">Personas</label>
+                      <input type="number" id="r-guests" name="guests" class="form-control ae-input" min="1" max="12" value="2" required inputmode="numeric" />
+                      <div class="invalid-feedback">Entre 1 y 12 personas.</div>
+                    </div>
+                    <div class="col-6">
+                      <label for="r-source" class="form-label">Pagar abono desde</label>
+                      <select id="r-source" name="source" class="form-select ae-input" required data-bind="sourceOptions"></select>
+                      <div class="invalid-feedback">Elige la cuenta de origen.</div>
+                    </div>
+                    <div class="col-12">
+                      <label for="r-name" class="form-label">A nombre de</label>
+                      <input type="text" id="r-name" name="name" class="form-control ae-input" required minlength="3" autocomplete="name" />
+                      <div class="invalid-feedback">Escribe al menos 3 caracteres.</div>
+                    </div>
+                    <div class="col-12">
+                      <label for="r-notes" class="form-label">Petición especial <span class="ae-muted">(opcional)</span></label>
+                      <textarea id="r-notes" name="notes" class="form-control ae-input" rows="2" maxlength="160" placeholder="Cumpleaños, alergias, mesa cerca del altar…"></textarea>
+                    </div>
+                    <div class="col-12">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="r-terms" required />
+                        <label class="form-check-label" for="r-terms">Acepto que el abono se descuenta del total y que la mesa se libera 20 min después de la hora.</label>
+                        <div class="invalid-feedback">Debes aceptar las condiciones.</div>
+                      </div>
+                    </div>
+                    <div class="col-12">
+                      <button type="submit" class="btn ae-btn ae-btn--gold w-100 ae-btn--lg">Revisar reserva</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <aside class="col-12 col-lg-5" aria-label="Información del bar">
+                <div class="ae-card ae-info">
+                  <h2 class="ae-card__title">Antes de venir</h2>
+                  <ul class="ae-info__list">
+                    <li><svg class="ae-icon" aria-hidden="true"><use href="#i-clock"/></svg><span><strong>Miércoles a domingo</strong><br>7:00 p. m. – 3:00 a. m.</span></li>
+                    <li><svg class="ae-icon" aria-hidden="true"><use href="#i-moon"/></svg><span><strong>Lunes y martes</strong><br>El coven descansa.</span></li>
+                    <li><svg class="ae-icon" aria-hidden="true"><use href="#i-pin"/></svg><span>Calle de las Brujas 13, Barrio Antiguo</span></li>
+                    <li><svg class="ae-icon" aria-hidden="true"><use href="#i-users"/></svg><span>Solo mayores de 18 años. Se pide documento.</span></li>
+                  </ul>
+                </div>
+              </aside>
+            </div>
+          </div>
+
+          <!-- FORMULARIO · Regalar Esencia (transferencia a otra persona) -->
+          <div class="tab-pane fade" id="pane-regalar" role="tabpanel" aria-labelledby="tab-regalar" tabindex="0">
+            <div class="row g-4">
+              <div class="col-12 col-lg-7">
+                <form class="ae-card ae-form needs-validation" id="form-regalar" novalidate>
+                  <div class="row g-3">
+                    <div class="col-12">
+                      <label for="g-amount" class="form-label">Monto a regalar (COP)</label>
+                      <div class="input-group ae-input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" id="g-amount" name="amount" class="form-control ae-input ae-input--amount" min="10000" step="1000" required inputmode="numeric" placeholder="50000" />
+                        <div class="invalid-feedback">El monto mínimo es $ 10.000.</div>
+                      </div>
+                      <div class="ae-chips mt-2" role="group" aria-label="Montos sugeridos">
+                        <button type="button" class="ae-chip" data-amount="40000">$ 40.000 · 1 elixir</button>
+                        <button type="button" class="ae-chip" data-amount="80000">$ 80.000 · 2 elixires</button>
+                        <button type="button" class="ae-chip" data-amount="150000">$ 150.000 · ritual</button>
+                      </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label for="g-source" class="form-label">Cuenta de origen</label>
+                      <select id="g-source" name="source" class="form-select ae-input" required data-bind="sourceOptions"></select>
+                      <div class="form-text ae-muted" data-bind="sourceHint"></div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label for="g-to" class="form-label">Destinatario</label>
+                      <input type="text" id="g-to" name="to" class="form-control ae-input" required pattern="^@[A-Za-z0-9_.]{3,20}$|^[^@\s]+@[^@\s]+\.[^@\s]+$" placeholder="@usuario o correo" list="g-contacts" autocomplete="off" />
+                      <datalist id="g-contacts" data-bind="contacts"></datalist>
+                      <div class="invalid-feedback">Usa un @usuario del Coven o un correo válido.</div>
+                    </div>
+                    <div class="col-12">
+                      <label for="g-message" class="form-label">Mensaje <span class="ae-muted">(opcional)</span></label>
+                      <input type="text" id="g-message" name="message" class="form-control ae-input" maxlength="80" placeholder="Que la luna te acompañe ✦" />
+                    </div>
+                    <div class="col-12">
+                      <button type="submit" class="btn ae-btn ae-btn--gold w-100 ae-btn--lg">Revisar envío</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <aside class="col-12 col-lg-5" aria-label="Cómo funciona regalar">
+                <div class="ae-card ae-info">
+                  <h2 class="ae-card__title">Cómo funciona</h2>
+                  <ol class="ae-steps">
+                    <li>Elige un monto y la cuenta desde la que se descuenta.</li>
+                    <li>Tu invitada recibe una tarjeta con tu mensaje.</li>
+                    <li>La usa en la barra con su código QR.</li>
+                  </ol>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VISTA · CARTA & PAGOS (equivalente a "Pagos")
+           Carta filtrable + "Cuenta de mesa" con pago.
+           =================================================================== -->
+      <section class="ae-view d-none" data-view="carta" aria-labelledby="t-carta">
+        <div class="ae-view__head">
+          <p class="ae-eyebrow">Mesa <span data-bind="tableNumber">7</span> · Altar Norte</p>
+          <h1 id="t-carta" class="ae-title" tabindex="-1">Carta de Elixires</h1>
+        </div>
+
+        <!-- COMPONENTE · Filtros por categoría -->
+        <div class="ae-chips mb-3" role="group" aria-label="Filtrar carta por categoría" data-bind="menuFilters">
+          <button type="button" class="ae-chip is-active" data-filter="all" aria-pressed="true">Todo</button>
+          <button type="button" class="ae-chip" data-filter="autor" aria-pressed="false">Elixires de autor</button>
+          <button type="button" class="ae-chip" data-filter="sin-alcohol" aria-pressed="false">Pociones sin alcohol</button>
+          <button type="button" class="ae-chip" data-filter="ritual" aria-pressed="false">Rituales</button>
+        </div>
+
+        <div class="row g-4">
+          <!-- COMPONENTE · Grilla de productos -->
+          <div class="col-12 col-lg-8">
+            <div class="row g-3" data-bind="menu"></div>
+          </div>
+
+          <!-- COMPONENTE · Cuenta de mesa (resumen de pago) -->
+          <div class="col-12 col-lg-4">
+            <aside class="ae-card ae-bill" aria-labelledby="bill-title">
+              <h2 id="bill-title" class="ae-card__title">Cuenta de la mesa</h2>
+              <ul class="ae-bill__list" data-bind="billItems" aria-live="polite"></ul>
+              <dl class="ae-bill__totals">
+                <div><dt>Subtotal</dt><dd data-bind="billSubtotal">$ 0</dd></div>
+                <div><dt>Propina sugerida (10%)</dt><dd data-bind="billTip">$ 0</dd></div>
+                <div class="ae-bill__total"><dt>Total</dt><dd data-bind="billTotal">$ 0</dd></div>
+              </dl>
+              <button type="button" class="btn ae-btn ae-btn--gold w-100 ae-btn--lg" data-action="pay-bill" disabled>Pagar cuenta</button>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VISTA · HISTORIAL (equivalente a "Movimientos")
+           =================================================================== -->
+      <section class="ae-view d-none" data-view="historial" aria-labelledby="t-historial">
+        <div class="ae-view__head">
+          <p class="ae-eyebrow">Movimientos</p>
+          <h1 id="t-historial" class="ae-title" tabindex="-1">Historial</h1>
+        </div>
+        <div class="ae-card">
+          <div class="row g-2 mb-3">
+            <div class="col-12 col-md-6">
+              <label for="h-search" class="visually-hidden">Buscar movimiento</label>
+              <input type="search" id="h-search" class="form-control ae-input" placeholder="Buscar movimiento…" />
+            </div>
+            <div class="col-12 col-md-6">
+              <label for="h-type" class="visually-hidden">Filtrar por tipo</label>
+              <select id="h-type" class="form-select ae-input">
+                <option value="all">Todos los movimientos</option>
+                <option value="in">Solo ingresos</option>
+                <option value="out">Solo consumos</option>
+              </select>
+            </div>
+          </div>
+          <ul class="ae-tx-list" data-bind="allTx" aria-live="polite"></ul>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VISTA · AJUSTES (equivalente a "Configuración")
+           =================================================================== -->
+      <section class="ae-view d-none" data-view="ajustes" aria-labelledby="t-ajustes">
+        <div class="ae-view__head">
+          <p class="ae-eyebrow">Tu perfil</p>
+          <h1 id="t-ajustes" class="ae-title" tabindex="-1">Ajustes</h1>
+        </div>
+        <div class="row g-4">
+          <div class="col-12 col-lg-7">
+            <form class="ae-card ae-form needs-validation" id="form-perfil" novalidate>
+              <h2 class="ae-card__title">Datos personales</h2>
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <label for="p-name" class="form-label">Nombre</label>
+                  <input type="text" id="p-name" class="form-control ae-input" required minlength="2" autocomplete="name" />
+                  <div class="invalid-feedback">Escribe tu nombre.</div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label for="p-handle" class="form-label">Usuario del Coven</label>
+                  <input type="text" id="p-handle" class="form-control ae-input" required pattern="^@[A-Za-z0-9_.]{3,20}$" />
+                  <div class="invalid-feedback">Formato: @nombre (3–20 caracteres).</div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label for="p-email" class="form-label">Correo</label>
+                  <input type="email" id="p-email" class="form-control ae-input" required autocomplete="email" />
+                  <div class="invalid-feedback">Escribe un correo válido.</div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label for="p-birth" class="form-label">Fecha de nacimiento</label>
+                  <input type="date" id="p-birth" class="form-control ae-input" required />
+                  <div class="invalid-feedback">Debes ser mayor de 18 años.</div>
+                </div>
+                <div class="col-12">
+                  <button type="submit" class="btn ae-btn ae-btn--gold">Guardar cambios</button>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="col-12 col-lg-5">
+            <div class="ae-card">
+              <h2 class="ae-card__title">Notificaciones</h2>
+              <div class="form-check form-switch ae-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="s-moon" checked />
+                <label class="form-check-label" for="s-moon">Avisos de rituales de luna llena</label>
+              </div>
+              <div class="form-check form-switch ae-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="s-tx" checked />
+                <label class="form-check-label" for="s-tx">Confirmación de cada pago</label>
+              </div>
+              <div class="form-check form-switch ae-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="s-motion" />
+                <label class="form-check-label" for="s-motion">Reducir animaciones</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           VISTA · MÁS (solo accesible desde la bottom navigation)
+           =================================================================== -->
+      <section class="ae-view d-none" data-view="mas" aria-labelledby="t-mas">
+        <div class="ae-view__head">
+          <p class="ae-eyebrow">Arcana &amp; Elixires</p>
+          <h1 id="t-mas" class="ae-title" tabindex="-1">Más opciones</h1>
+        </div>
+        <nav class="ae-card ae-menu-list" aria-label="Más opciones">
+          <a href="#historial" data-view-link="historial"><svg class="ae-icon" aria-hidden="true"><use href="#i-history"/></svg><span>Historial de movimientos</span><svg class="ae-icon ae-icon--sm" aria-hidden="true"><use href="#i-chevron"/></svg></a>
+          <a href="#ajustes" data-view-link="ajustes"><svg class="ae-icon" aria-hidden="true"><use href="#i-settings"/></svg><span>Ajustes y perfil</span><svg class="ae-icon ae-icon--sm" aria-hidden="true"><use href="#i-chevron"/></svg></a>
+          <a href="#grimorio" data-view-link="grimorio"><svg class="ae-icon" aria-hidden="true"><use href="#i-book"/></svg><span>Beneficios de miembro</span><svg class="ae-icon ae-icon--sm" aria-hidden="true"><use href="#i-chevron"/></svg></a>
+          <button type="button" data-action="logout"><svg class="ae-icon" aria-hidden="true"><use href="#i-logout"/></svg><span>Cerrar sesión</span><svg class="ae-icon ae-icon--sm" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+        </nav>
+      </section>
+
+      <!-- ===================================================================
+           VISTA · SESIÓN CERRADA
+           =================================================================== -->
+      <section class="ae-view d-none" data-view="salida" aria-labelledby="t-salida">
+        <div class="ae-goodbye">
+          <svg class="ae-goodbye__logo" aria-hidden="true"><use href="#i-logo"/></svg>
+          <h1 id="t-salida" class="ae-title" tabindex="-1">Hasta la próxima luna</h1>
+          <p class="ae-muted">Tu sesión se cerró de forma segura.</p>
+          <a href="#inicio" class="btn ae-btn ae-btn--gold ae-btn--lg" data-action="login">Volver a entrar</a>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- =======================================================================
+       COMPONENTE · Bottom navigation (tabs inferiores fijas)
+       - Visible en todos los tamaños. En desktop se muestra como "dock" centrado.
+       - data-view-link + data-nav-group permiten resaltar la pestaña padre
+         (p. ej. Historial y Ajustes iluminan "Más").
+       ======================================================================= -->
+  <nav class="ae-tabbar" aria-label="Navegación inferior">
+    <a href="#inicio" class="ae-tabbar__item" data-view-link="inicio"><svg class="ae-icon" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+    <a href="#grimorio" class="ae-tabbar__item" data-view-link="grimorio"><svg class="ae-icon" aria-hidden="true"><use href="#i-book"/></svg><span>Grimorio</span></a>
+    <a href="#reservar" class="ae-tabbar__item ae-tabbar__item--main" data-view-link="reservar"><span class="ae-tabbar__orb"><svg class="ae-icon" aria-hidden="true"><use href="#i-calendar"/></svg></span><span>Reservar</span></a>
+    <a href="#carta" class="ae-tabbar__item" data-view-link="carta"><svg class="ae-icon" aria-hidden="true"><use href="#i-glass"/></svg><span>Carta</span></a>
+    <a href="#mas" class="ae-tabbar__item" data-view-link="mas"><svg class="ae-icon" aria-hidden="true"><use href="#i-more"/></svg><span>Más</span></a>
+  </nav>
+
+  <!-- =======================================================================
+       COMPONENTE · Modal de confirmación genérico
+       Se reutiliza para reservas, regalos, pagos, recargas y cierre de sesión.
+       Estados: "review" (resumen) → "loading" (spinner) → "success" | "error".
+       ======================================================================= -->
+  <div class="modal fade ae-modal" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title" id="confirmModalTitle">Confirmar</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Estado: resumen -->
+          <div data-modal-state="review">
+            <dl class="ae-summary" data-bind="modalSummary"></dl>
+          </div>
+          <!-- Estado: cargando -->
+          <div data-modal-state="loading" class="text-center py-4 d-none" role="status">
+            <div class="spinner-border ae-spinner" aria-hidden="true"></div>
+            <p class="mt-3 mb-0 ae-muted">Conjurando la operación…</p>
+          </div>
+          <!-- Estado: éxito -->
+          <div data-modal-state="success" class="text-center py-3 d-none">
+            <span class="ae-result ae-result--ok"><svg class="ae-icon" aria-hidden="true"><use href="#i-check"/></svg></span>
+            <p class="ae-result__title" data-bind="modalSuccessTitle">¡Hecho!</p>
+            <p class="ae-muted mb-0" data-bind="modalSuccessText"></p>
+          </div>
+          <!-- Estado: error -->
+          <div data-modal-state="error" class="d-none">
+            <div class="alert ae-alert ae-alert--error d-flex gap-2 mb-0" role="alert">
+              <svg class="ae-icon flex-shrink-0" aria-hidden="true"><use href="#i-alert"/></svg>
+              <div><strong>No se pudo completar.</strong><br><span data-bind="modalErrorText"></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn ae-btn ae-btn--ghost" data-bs-dismiss="modal" data-modal-cancel>Cancelar</button>
+          <button type="button" class="btn ae-btn ae-btn--gold" data-modal-confirm>Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPONENTE · Contenedor de toasts (mensajes breves, anunciados a lectores de pantalla) -->
+  <div class="toast-container position-fixed ae-toasts" aria-live="polite" aria-atomic="true" data-bind="toasts"></div>
+
+  <!-- Bootstrap 5 (JS bundle con Popper) vía CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <!-- Lógica propia -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
